@@ -10,9 +10,10 @@ import org.springframework.validation.annotation.Validated;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+
 import java.time.LocalDate;
 import java.util.NoSuchElementException;
-import java.util.Objects;
+
 
 @Service
 @Validated
@@ -26,7 +27,6 @@ public class ResourceUseCases {
         this.resourceRepository = resourceRepository;
         this.mapper = mapper;
     }
-
 
     public Flux<ResourceDTO> getAllResources() {
         return resourceRepository.findAll().switchIfEmpty(Flux.empty()).map(mapper::convertToDTO);
@@ -94,9 +94,19 @@ public class ResourceUseCases {
         );
     }
 
+    public Flux<ResourceDTO> recommendByType(String type) {
+        return resourceRepository.findByType(type).map(mapper::convertToDTO);
+    }
+
+    public Flux<ResourceDTO> recommendByGenre(String genre) {
+        return resourceRepository.findByGenre(genre).map(mapper::convertToDTO);
+    }
+
+    public Flux<ResourceDTO> recommendByTypeAndGenre(String type, String genre) {
+
+       return resourceRepository.findByTypeAndGenre(type, genre).map(mapper::convertToDTO).distinct();
 
 
-
-
+    }
 
 }

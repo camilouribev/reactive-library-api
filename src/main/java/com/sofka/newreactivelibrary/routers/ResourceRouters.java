@@ -8,6 +8,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
+import reactor.core.publisher.Flux;
 
 import static org.springframework.web.reactive.function.server.RequestPredicates.*;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
@@ -102,6 +103,38 @@ public class ResourceRouters {
                         .contentType(MediaType.APPLICATION_JSON)
                         .body(BodyInserters.fromPublisher(resourceUseCases.returnResource(request.pathVariable("id")), String.class))
                         .onErrorResume((error) -> ServerResponse.badRequest().build())
+        );
+    }
+
+    @Bean
+    public RouterFunction<ServerResponse> recommendByType(ResourceUseCases resourceUseCases) {
+        return route(
+                GET("/api/resources/recommendbytype/{type}"),
+                request -> ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(BodyInserters.fromPublisher(resourceUseCases.recommendByType(request.pathVariable("type")), ResourceDTO.class)
+                        ).onErrorResume((Error) -> ServerResponse.badRequest().build())
+        );
+    }
+    @Bean
+    public RouterFunction<ServerResponse> recommendByGenre(ResourceUseCases resourceUseCases) {
+        return route(
+                GET("/api/resources/recommendbygenre/{genre}"),
+                request -> ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(BodyInserters.fromPublisher(resourceUseCases.recommendByGenre(request.pathVariable("genre")), ResourceDTO.class)
+                        ).onErrorResume((Error) -> ServerResponse.badRequest().build())
+        );
+    }
+
+    @Bean
+    public RouterFunction<ServerResponse> recommendByTypeAndGenre(ResourceUseCases resourceUseCases) {
+        return route(
+                GET("/api/resources/recommendspecific/{type}/{genre}"),
+                request -> ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(BodyInserters.fromPublisher(resourceUseCases.recommendByTypeAndGenre(request.pathVariable("type"), request.pathVariable("genre")), ResourceDTO.class)
+                        ).onErrorResume((Error) -> ServerResponse.badRequest().build())
         );
     }
 
