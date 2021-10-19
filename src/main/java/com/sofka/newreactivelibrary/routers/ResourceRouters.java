@@ -74,5 +74,18 @@ public class ResourceRouters {
     }
 
 
+    @Bean
+    public RouterFunction<ServerResponse> checkIfResourceIsAvailable(ResourceUseCases resourceUseCases) {
+        return route(
+                GET("/api/resources/{id}/isavailable"),
+                request -> ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(BodyInserters.fromPublisher(resourceUseCases.checkIfResourceIsAvailable(request.pathVariable("id")), String.class)
+                        ).onErrorResume( Error -> ServerResponse.badRequest().build())
+
+        );
+    }
+
+
 
 }

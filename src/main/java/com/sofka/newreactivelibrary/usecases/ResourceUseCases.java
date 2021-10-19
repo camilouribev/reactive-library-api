@@ -11,6 +11,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.NoSuchElementException;
+import java.util.Objects;
 
 @Service
 @Validated
@@ -18,6 +19,7 @@ public class ResourceUseCases {
 
     private final ResourceRepository resourceRepository;
     private final ResourceMapper mapper;
+
     @Autowired
     public ResourceUseCases(ResourceRepository resourceRepository, ResourceMapper mapper) {
         this.resourceRepository = resourceRepository;
@@ -31,7 +33,7 @@ public class ResourceUseCases {
 
 
     public Mono<ResourceDTO> createResource(ResourceDTO resource) {
-       return resourceRepository.save(mapper.convertToEntity(resource)).flatMap(value-> Mono.just(mapper.convertToDTO(value))) ;
+        return resourceRepository.save(mapper.convertToEntity(resource)).flatMap(value -> Mono.just(mapper.convertToDTO(value)));
     }
 
     public Mono<ResourceDTO> getResourceById(String id) {
@@ -41,11 +43,10 @@ public class ResourceUseCases {
 
     public Mono<ResourceDTO> updateResource(ResourceDTO resource) {
 
-        return resourceRepository.existsById(resource.getId()).flatMap( resourceExists -> {
-            if(resourceExists){
-                return resourceRepository.save(mapper.convertToEntity(resource)).flatMap(value-> Mono.just(mapper.convertToDTO(value)));
-            }
-            else{
+        return resourceRepository.existsById(resource.getId()).flatMap(resourceExists -> {
+            if (resourceExists) {
+                return resourceRepository.save(mapper.convertToEntity(resource)).flatMap(value -> Mono.just(mapper.convertToDTO(value)));
+            } else {
                 throw new NoSuchElementException();
             }
 
@@ -56,7 +57,17 @@ public class ResourceUseCases {
         return resourceRepository.deleteById(id);
     }
 
+    public Mono<String> checkIfResourceIsAvailable(String id) {
+        Objects.requireNonNull(id, "El id no puede ser nulo");
+        return resourceRepository.findById(id)
+                .map(resource ->  resource.getTotalCopies() > resource.getBorrowedCopies()
+                        ? "The " + resource.getType() + " " + resource.getName() + " is available. There are "
+                        + (resource.getTotalCopies() - resource.getBorrowedCopies()) + " copies remaining."
+                        :
+                       "All copies of the " + resource.getType() + " " + resource.getName() + " are borrowed." +
+                                " The last copy was borrowed on " + resource.getLoanDate());
 
+    }
 
 
 }
