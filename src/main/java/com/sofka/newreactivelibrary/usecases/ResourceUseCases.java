@@ -10,6 +10,7 @@ import org.springframework.validation.annotation.Validated;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDate;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
@@ -58,7 +59,6 @@ public class ResourceUseCases {
     }
 
     public Mono<String> checkIfResourceIsAvailable(String id) {
-        Objects.requireNonNull(id, "El id no puede ser nulo");
         return resourceRepository.findById(id)
                 .map(resource ->  resource.getTotalCopies() > resource.getBorrowedCopies()
                         ? "The " + resource.getType() + " " + resource.getName() + " is available. There are "
@@ -68,6 +68,35 @@ public class ResourceUseCases {
                                 " The last copy was borrowed on " + resource.getLoanDate());
 
     }
+
+    public Mono<String> borrowResource(String id) {
+        return resourceRepository.findById(id).flatMap(
+                resource -> {
+                    if (resource.getTotalCopies() > resource.getBorrowedCopies()) {
+                        resource.setLoanDate(LocalDate.now());
+                        resource.setBorrowedCopies(resource.getBorrowedCopies() + 1);
+                        return updateResource(mapper.convertToDTO(resource)).thenReturn("You borrowed a copy of the" + resource.getType() + " " + resource.getName() + " on " + resource.getLoanDate());
+                    }
+                    return Mono.just("All copies of the " + resource.getType() + " " + resource.getName() + " are borrowed.") ;
+                }
+        );
+    }
+
+    public Mono<String> returnResource(String id) {
+        return resourceRepository.findById(id).flatMap(
+                resource -> {
+                    if (resource.getBorrowedCopies() > 0) {
+                        resource.setBorrowedCopies(resource.getBorrowedCopies() - 1);
+                        return updateResource(mapper.convertToDTO(resource)).thenReturn("You returned a copy of the " + resource.getType() + " " + resource.getName());
+                    }
+                    return Mono.just("No copies of the " + resource.getType() + " " + resource.getName() + " are available.") ;
+                }
+        );
+    }
+
+
+
+
 
 
 }
