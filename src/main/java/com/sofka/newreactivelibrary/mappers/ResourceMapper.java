@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class ResourceMapper {
-    private ModelMapper mapper;
+    private final  ModelMapper mapper;
 
     public ResourceMapper(ModelMapper mapper) {
         this.mapper = mapper;
@@ -20,5 +20,7 @@ public class ResourceMapper {
         Resource resource= mapper.map(resourceDTO,Resource.class);
         return resource;
     }
+
+
 
 }

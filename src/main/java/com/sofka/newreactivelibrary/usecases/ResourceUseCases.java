@@ -10,6 +10,8 @@ import org.springframework.validation.annotation.Validated;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.NoSuchElementException;
+
 @Service
 @Validated
 public class ResourceUseCases {
@@ -24,13 +26,37 @@ public class ResourceUseCases {
 
 
     public Flux<ResourceDTO> getAllResources() {
-        return resourceRepository.findAll().switchIfEmpty(Flux.empty()).map(res -> mapper.convertToDTO(res));
+        return resourceRepository.findAll().switchIfEmpty(Flux.empty()).map(mapper::convertToDTO);
     }
 
 
     public Mono<ResourceDTO> createResource(ResourceDTO resource) {
-
-        var saved = resourceRepository.save(mapper.convertToEntity(resource)).flatMap(value-> Mono.just(mapper.convertToDTO(value))) ;
-       return saved;
+       return resourceRepository.save(mapper.convertToEntity(resource)).flatMap(value-> Mono.just(mapper.convertToDTO(value))) ;
     }
+
+    public Mono<ResourceDTO> getResourceById(String id) {
+        return resourceRepository.findById(id).map(mapper::convertToDTO);
+    }
+
+
+    public Mono<ResourceDTO> updateResource(ResourceDTO resource) {
+
+        return resourceRepository.existsById(resource.getId()).flatMap( resourceExists -> {
+            if(resourceExists){
+                return resourceRepository.save(mapper.convertToEntity(resource)).flatMap(value-> Mono.just(mapper.convertToDTO(value)));
+            }
+            else{
+                throw new NoSuchElementException();
+            }
+
+        });
+    }
+
+    public Mono<Void> deleteResource(String id) {
+        return resourceRepository.deleteById(id);
+    }
+
+
+
+
 }
